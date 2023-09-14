@@ -1,0 +1,20 @@
+[package]
+name = "klex"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+thiserror = "1.0.48"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "lex_1K"
+harness = false
+
+[[bench]]
+name = "lex_1M"
+harness = false
