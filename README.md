@@ -18,7 +18,19 @@ klex = { git = "https://www.github.com/sanj0/klex.git", branch = "main" }
 Use `klex` to lex some code:
 
 ```rust
-let token = Lexer::new("greet = \"Hello, \" + name").lex()?;
+use klex::{Lexer, Token}
+let tokens = Lexer::new("greet = \"Hello, \" + name").lex()?;
+// Extract the inner token, discarding location information
+let inner_tokens: Vec<_> = tokens.into_iter().map(|t| t.inner).collect();
+assert_eq!(
+    inner_tokens,
+    vec![
+        Token::Sym("greet".into()),
+        Token::Equal,
+        Token::Str("Hello, ".into()),
+        Token::Plus,
+        Token::Sym("name".into()),
+    ])
 ```
 
 # Tokens
