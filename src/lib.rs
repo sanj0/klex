@@ -17,9 +17,9 @@ pub enum KlexError {
 /// Holds the location of a token within the code.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Loc {
-    file_index: usize,
-    row: usize,
-    col: usize,
+    pub file_index: usize,
+    pub row: usize,
+    pub col: usize,
 }
 
 /// A rich token, which includes an inner [token](Token), its [location](Loc) and its length in
@@ -27,8 +27,8 @@ pub struct Loc {
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct RichToken {
     pub inner: Token,
-    loc: Loc,
-    len: usize,
+    pub loc: Loc,
+    pub len: usize,
 }
 
 /// A token.
@@ -162,5 +162,39 @@ impl std::ops::Sub<usize> for Loc {
 impl Display for Loc {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "file{}:{}:{}", self.file_index, self.row, self.col)
+    }
+}
+
+pub fn format_tokens(xs: &[RichToken]) -> String {
+    let mut buf = String::new();
+    for (i, rt) in xs.into_iter().enumerate() {
+        let token = &rt.inner;
+        buf += token.spelling();
+        match token {
+            Token::LParen => (),
+            Token::LBrace => {
+                buf.push('\n');
+            }
+            Token::RBrace => {
+                buf.push('\n');
+            }
+            _ => {
+                if !matches!(xs.get(i+1).map(|t| &t.inner), Some(Token::RParen)) {
+                    buf.push(' ');
+                }
+            }
+        }
+    }
+    buf = buf.trim_end().into();
+    buf
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn format_tokens() {
+        let fmt = super::format_tokens(&Lexer::new("   a* (   b+   c  )     =d", 0).lex().unwrap());
+        assert_eq!(fmt, "a * (b + c) = d");
     }
 }
