@@ -65,7 +65,7 @@ impl<'a> Lexer<'a> {
                 '?' => Question,
                 '\'' => Tick,
                 ',' => Comma,
-                ';' => SemiColon,
+                ';' => extend!(SemiColon to SemiSemi if ';'),
                 '.' => Period,
                 ':' => extend!(Colon to ColonColon if ':'),
 
@@ -174,7 +174,7 @@ impl<'a> CharStream<'a> {
 
 #[cfg(test)]
 mod tests {
-    const SEPARATOR_SRC: &str = "!$% &= ==? ' , ;.: ::";
+    const SEPARATOR_SRC: &str = "!$% &= ==? ' , ; ;;.: ::";
     const SYMBOL_SRC: &str = "foo+bar =baz_or$not";
     use super::*;
 
@@ -197,7 +197,7 @@ mod tests {
             tokens,
             vec![
                 Bang, Dollar, Percent, Ampersand, Equal, EqualEqual, Question, Tick, Comma,
-                SemiColon, Period, Colon, ColonColon,
+                SemiColon, SemiSemi, Period, Colon, ColonColon,
             ]
         );
     }
