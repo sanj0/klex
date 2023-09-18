@@ -130,7 +130,7 @@ impl RichToken {
 }
 
 impl Loc {
-    fn start_of_file(file_index: usize) -> Self {
+    pub fn start_of_file(file_index: usize) -> Self {
         Self {
             file_index,
             row: 1,
