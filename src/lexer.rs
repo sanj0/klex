@@ -25,6 +25,7 @@ impl<'a> Lexer<'a> {
     }
 
     pub fn lex(&mut self) -> Result<Vec<RichToken>, KlexError> {
+        // this could probably be written with variadics but that's too complicated :)
         macro_rules! extend {
             ($base:ident to $ex:ident if $c:literal) => {
                 if self.chars.peek() == Some(&$c) {
@@ -47,6 +48,23 @@ impl<'a> Lexer<'a> {
                     _ => $base,
                 }
             };
+            ($base:ident to $ex1:ident if $c1:literal or $ex2:ident if $c2:literal or $ex3:ident if $c3:literal) => {
+                match self.chars.peek() {
+                    Some(&$c1) => {
+                        self.chars.next();
+                        $ex1
+                    }
+                    Some(&$c2) => {
+                        self.chars.next();
+                        $ex2
+                    }
+                    Some(&$c3) => {
+                        self.chars.next();
+                        $ex3
+                    }
+                    _ => $base,
+                }
+            };
         }
         let mut tokens = Vec::new();
 
@@ -61,7 +79,7 @@ impl<'a> Lexer<'a> {
                 '$' => Dollar,
                 '%' => Percent,
                 '&' => Ampersand,
-                '=' => extend!(Equal to EqualEqual if '='),
+                '=' => extend!(Equal to EqualEqual if '=' or BigArrow if '>'),
                 '?' => Question,
                 '\'' => Tick,
                 ',' => Comma,
@@ -72,7 +90,7 @@ impl<'a> Lexer<'a> {
                 '/' => extend!(Slash to SlashSlash if '/' or SlashEq if '='),
                 '*' => extend!(Aster to AsterAster if '*' or AsterEq if '='),
                 '+' => extend!(Plus to PlusPlus if '+' or PlusEq if '='),
-                '-' => extend!(Dash to DashDash if '-' or DashEq if '='),
+                '-' => extend!(Dash to DashDash if '-' or DashEq if '=' or Arrow if '>'),
                 '<' => extend!(Less to LessEq if '='),
                 '>' => extend!(Greater to GreaterEq if '='),
 
