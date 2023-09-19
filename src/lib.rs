@@ -71,6 +71,9 @@ pub enum Token {
     Greater,
     GreaterEq,
 
+    Arrow,
+    BigArrow,
+
     LBrace,
     RBrace,
     LBrack,
@@ -114,6 +117,9 @@ impl Token {
             Self::LessEq => "<=",
             Self::Greater => ">",
             Self::GreaterEq => ">=",
+
+            Self::Arrow => "->",
+            Self::BigArrow => "=>",
 
             Self::LBrace => "{",
             Self::RBrace => "}",
