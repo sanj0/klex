@@ -3,28 +3,32 @@ use std::{iter::Peekable, str::Chars};
 use crate::{KlexError, Loc, RichToken, Token, Comment};
 
 #[derive(Clone, Debug)]
-struct CharStream<'a> {
-    inner: Peekable<Chars<'a>>,
+struct CharStream<I>
+where I: Iterator<Item = char> {
+    inner: Peekable<I>,
     index: usize,
     loc: Loc,
 }
 
 #[derive(Clone, Debug)]
-pub struct Lexer<'a> {
-    chars: CharStream<'a>,
+pub struct Lexer<I> 
+where I: Iterator<Item = char> {
+    chars: CharStream<I>,
 }
 
 fn is_separator_char(c: char) -> bool {
     !(c.is_ascii_alphabetic() || c.is_ascii_digit() || "_$".contains(c))
 }
 
-impl<'a> Lexer<'a> {
+impl<'a> Lexer<Chars<'a>> {
     pub fn new(src: &'a str, file_index: usize) -> Self {
         Self {
             chars: CharStream::new(src, file_index),
         }
     }
-
+}
+impl<I> Lexer<I>
+where I: Iterator<Item = char> {
     pub fn lex(&mut self) -> Result<Vec<RichToken>, KlexError> {
         // this could probably be written with variadics but that's too complicated :)
         macro_rules! extend {
@@ -196,7 +200,8 @@ impl<'a> Lexer<'a> {
     }
 }
 
-impl<'a> Iterator for CharStream<'a> {
+impl<I> Iterator for CharStream<I>
+where I: Iterator<Item = char> {
     type Item = char;
     fn next(&mut self) -> Option<Self::Item> {
         let c = self.inner.next()?;
@@ -211,7 +216,7 @@ impl<'a> Iterator for CharStream<'a> {
     }
 }
 
-impl<'a> CharStream<'a> {
+impl<'a> CharStream<Chars<'a>> {
     pub fn new(src: &'a str, file_index: usize) -> Self {
         Self {
             inner: src.chars().peekable(),
@@ -219,7 +224,10 @@ impl<'a> CharStream<'a> {
             loc: Loc::start_of_file(file_index),
         }
     }
+}
 
+impl<I> CharStream<I>
+where I: Iterator<Item = char> {
     pub fn peek(&mut self) -> Option<&char> {
         self.inner.peek()
     }
