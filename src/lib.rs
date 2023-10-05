@@ -12,6 +12,8 @@ pub enum KlexError {
     UnterminatedStringLiteral(Loc),
     #[error("invalid escape sequence at {0}")]
     InvalidEscapeSequence(Loc),
+    #[error("unterminated block comment starting at {0}")]
+    UnterminatedBlockComment(Loc),
 }
 
 /// Holds the location of a token within the code.
@@ -20,6 +22,13 @@ pub struct Loc {
     pub file_index: usize,
     pub row: usize,
     pub col: usize,
+}
+
+// A Line comment // ... or a Block comment /* ... */
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub enum Comment {
+    LineComment(String),
+    BlockComment(String),
 }
 
 /// A rich token, which includes an inner [token](Token), its [location](Loc) and its length in
@@ -39,6 +48,8 @@ pub enum Token {
     Num(String),
     Str(String),
 
+    Comment(Comment),
+
     Bang,
     Dollar,
     Percent,
@@ -55,7 +66,6 @@ pub enum Token {
     ColonColon,
 
     Slash,
-    SlashSlash,
     SlashEq,
     Aster,
     AsterAster,
@@ -86,6 +96,9 @@ impl Token {
     pub fn spelling(&self) -> &str {
         match self {
             Self::Sym(s) | Self::Num(s) | Self::Str(s) => s,
+
+            Self::Comment(c) => c.get(),
+
             Self::Bang => "!",
             Self::Dollar => "$",
             Self::Percent => "%",
@@ -102,7 +115,6 @@ impl Token {
             Self::ColonColon => "::",
 
             Self::Slash => "/",
-            Self::SlashSlash => "//",
             Self::SlashEq => "/=",
             Self::Aster => "*",
             Self::AsterAster => "**",
@@ -195,6 +207,14 @@ pub fn format_tokens(xs: &[RichToken]) -> String {
     }
     buf = buf.trim_end().into();
     buf
+}
+
+impl Comment {
+    pub fn get(&self) -> &String {
+        match self {
+            Self::LineComment(s) | Self::BlockComment(s) => s,
+        }
+    }
 }
 
 #[cfg(test)]

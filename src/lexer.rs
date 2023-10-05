@@ -1,10 +1,11 @@
 use std::{iter::Peekable, str::Chars};
 
-use crate::{KlexError, Loc, RichToken, Token};
+use crate::{KlexError, Loc, RichToken, Token, Comment};
 
 #[derive(Clone, Debug)]
 struct CharStream<'a> {
     inner: Peekable<Chars<'a>>,
+    index: usize,
     loc: Loc,
 }
 
@@ -70,10 +71,11 @@ impl<'a> Lexer<'a> {
 
         use Token::*;
         while let Some(c0) = self.chars.next_skip_ws() {
-            let token_start = self.chars.loc - 1;
+            let token_loc = self.chars.loc - 1;
+            let start_index = self.chars.index - 1;
             let token = match c0 {
                 '0'..='9' => self.consume_num(c0),
-                '"' => self.consume_string_after_quote(token_start)?,
+                '"' => self.consume_string_after_quote(token_loc)?,
 
                 '!' => Bang,
                 '$' => Dollar,
@@ -87,7 +89,14 @@ impl<'a> Lexer<'a> {
                 '.' => Period,
                 ':' => extend!(Colon to ColonColon if ':'),
 
-                '/' => extend!(Slash to SlashSlash if '/' or SlashEq if '='),
+                '/' => {
+                    match self.chars.next() {
+                        Some('/') => self.consume_line_comment(),
+                        Some('*') => self.consume_block_comment()?,
+                        Some('=') => SlashEq,
+                        _ => Slash,
+                    }
+                }
                 '*' => extend!(Aster to AsterAster if '*' or AsterEq if '='),
                 '+' => extend!(Plus to PlusPlus if '+' or PlusEq if '='),
                 '-' => extend!(Dash to DashDash if '-' or DashEq if '=' or Arrow if '>'),
@@ -104,20 +113,48 @@ impl<'a> Lexer<'a> {
             };
             tokens.push(RichToken::new(
                 token,
-                token_start,
-                self.chars.loc - token_start,
+                token_loc,
+                self.chars.index - start_index,
             ));
         }
         Ok(tokens)
+    }
+
+    fn consume_line_comment(&mut self) -> Token {
+        let mut buf = String::new();
+        while let Some(c) = self.chars.next() {
+            if c == '\n' {
+                break
+            } else {
+                buf.push(c);
+            }
+        }
+        Token::Comment(Comment::LineComment(buf))
+    }
+
+    fn consume_block_comment(&mut self) -> Result<Token, KlexError> {
+        let loc = self.chars.loc;
+        let mut buf = String::new();
+        while let Some(c) = self.chars.next() {
+            if c == '*' {
+                if self.chars.peek() == Some(&'/') {
+                    self.chars.next();
+                    return Ok(Token::Comment(Comment::BlockComment(buf)));
+                }
+            }
+            buf.push(c);
+        }
+        Err(KlexError::UnterminatedBlockComment(loc))
     }
 
     fn consume_num(&mut self, c0: char) -> Token {
         Token::Num(self.buf_while(c0, |c| c.is_ascii_digit() || c == '.'))
     }
 
+    // takes an loc so that UnterminatedStringLiteral errors are reported at the location of the
+    // opening quote and not the location of the first character
     fn consume_string_after_quote(&mut self, loc: Loc) -> Result<Token, KlexError> {
         let mut buf = String::new();
-
         while let Some(c) = self.chars.next() {
             match c {
                 '"' => return Ok(Token::Str(buf)),
@@ -163,6 +200,7 @@ impl<'a> Iterator for CharStream<'a> {
     type Item = char;
     fn next(&mut self) -> Option<Self::Item> {
         let c = self.inner.next()?;
+        self.index += 1;
         if c == '\n' {
             self.loc.row += 1;
             self.loc.col = 1;
@@ -177,6 +215,7 @@ impl<'a> CharStream<'a> {
     pub fn new(src: &'a str, file_index: usize) -> Self {
         Self {
             inner: src.chars().peekable(),
+            index: 0,
             loc: Loc::start_of_file(file_index),
         }
     }
@@ -284,5 +323,22 @@ mod tests {
             tokens,
             vec![Token::Str("\"This is a string!\", said klex.".into())]
         );
+    }
+
+    #[test]
+    fn lex_comments() {
+        let src = "// line comment\nnext_line = yes /* inline comment */\n/* block\ncomment */";
+        let tokens = unwrap_rich_tokens(Lexer::new(src, 0).lex().unwrap());
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Comment(Comment::LineComment(" line comment".into())),
+                Token::Sym("next_line".into()),
+                Token::Equal,
+                Token::Sym("yes".into()),
+                Token::Comment(Comment::BlockComment(" inline comment ".into())),
+                Token::Comment(Comment::BlockComment(" block\ncomment ".into())),
+            ]
+        )
     }
 }
