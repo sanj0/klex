@@ -199,7 +199,7 @@ pub fn format_tokens(xs: &[RichToken]) -> String {
                 buf.push('\n');
             }
             _ => {
-                if !matches!(xs.get(i+1).map(|t| &t.inner), Some(Token::RParen)) {
+                if !matches!(xs.get(i + 1).map(|t| &t.inner), Some(Token::RParen)) {
                     buf.push(' ');
                 }
             }
