@@ -1,18 +1,22 @@
 use std::{iter::Peekable, str::Chars};
 
-use crate::{KlexError, Loc, RichToken, Token, Comment};
+use crate::{Comment, KlexError, Loc, RichToken, Token};
 
 #[derive(Clone, Debug)]
 struct CharStream<I>
-where I: Iterator<Item = char> {
+where
+    I: Iterator<Item = char>,
+{
     inner: Peekable<I>,
     index: usize,
     loc: Loc,
 }
 
 #[derive(Clone, Debug)]
-pub struct Lexer<I> 
-where I: Iterator<Item = char> {
+pub struct Lexer<I>
+where
+    I: Iterator<Item = char>,
+{
     chars: CharStream<I>,
 }
 
@@ -28,8 +32,21 @@ impl<'a> Lexer<Chars<'a>> {
     }
 }
 
+impl<I> Lexer<I>
+where
+    I: Iterator<Item = char>,
+{
+    pub fn from_iter(src: I, file_index: usize) -> Self {
+        Self {
+            chars: CharStream::from_iter(src, file_index),
+        }
+    }
+}
+
 impl<I> Iterator for Lexer<I>
-where I: Iterator<Item = char> {
+where
+    I: Iterator<Item = char>,
+{
     type Item = Result<RichToken, KlexError>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -75,14 +92,12 @@ where I: Iterator<Item = char> {
             };
         }
         macro_rules! question_mark {
-            ($ex:expr) => {
-                {
-                    match $ex {
-                        Ok(x) => x,
-                        Err(e) => return Some(Err(e)),
-                    }
+            ($ex:expr) => {{
+                match $ex {
+                    Ok(x) => x,
+                    Err(e) => return Some(Err(e)),
                 }
-            }
+            }};
         }
         use Token::*;
         if let Some(c0) = self.chars.next_skip_ws() {
@@ -103,14 +118,12 @@ where I: Iterator<Item = char> {
                 '.' => Period,
                 ':' => extend!(Colon to ColonColon if ':'),
 
-                '/' => {
-                    match self.chars.next() {
-                        Some('/') => self.consume_line_comment(),
-                        Some('*') => question_mark!(self.consume_block_comment()),
-                        Some('=') => SlashEq,
-                        _ => Slash,
-                    }
-                }
+                '/' => match self.chars.next() {
+                    Some('/') => self.consume_line_comment(),
+                    Some('*') => question_mark!(self.consume_block_comment()),
+                    Some('=') => SlashEq,
+                    _ => Slash,
+                },
                 '*' => extend!(Aster to AsterAster if '*' or AsterEq if '='),
                 '+' => extend!(Plus to PlusPlus if '+' or PlusEq if '='),
                 '-' => extend!(Dash to DashDash if '-' or DashEq if '=' or Arrow if '>'),
@@ -137,7 +150,9 @@ where I: Iterator<Item = char> {
 }
 
 impl<I> Lexer<I>
-where I: Iterator<Item = char> {
+where
+    I: Iterator<Item = char>,
+{
     /// Convenience function that collects the RichTokens yielded by this Lexer into a Vec, bailing
     /// out on the first Error stumbled upon
     pub fn lex(self) -> Result<Vec<RichToken>, KlexError> {
@@ -155,7 +170,7 @@ where I: Iterator<Item = char> {
         let mut buf = String::new();
         for c in self.chars.by_ref() {
             if c == '\n' {
-                break
+                break;
             } else {
                 buf.push(c);
             }
@@ -226,7 +241,9 @@ where I: Iterator<Item = char> {
 }
 
 impl<I> Iterator for CharStream<I>
-where I: Iterator<Item = char> {
+where
+    I: Iterator<Item = char>,
+{
     type Item = char;
     fn next(&mut self) -> Option<Self::Item> {
         let c = self.inner.next()?;
@@ -243,8 +260,17 @@ where I: Iterator<Item = char> {
 
 impl<'a> CharStream<Chars<'a>> {
     pub fn new(src: &'a str, file_index: usize) -> Self {
+        Self::from_iter(src.chars(), file_index)
+    }
+}
+
+impl<I> CharStream<I>
+where
+    I: Iterator<Item = char>,
+{
+    pub fn from_iter(iter: I, file_index: usize) -> Self {
         Self {
-            inner: src.chars().peekable(),
+            inner: iter.peekable(),
             index: 0,
             loc: Loc::start_of_file(file_index),
         }
@@ -252,7 +278,9 @@ impl<'a> CharStream<Chars<'a>> {
 }
 
 impl<I> CharStream<I>
-where I: Iterator<Item = char> {
+where
+    I: Iterator<Item = char>,
+{
     pub fn peek(&mut self) -> Option<&char> {
         self.inner.peek()
     }
@@ -274,14 +302,14 @@ mod tests {
 
     #[test]
     fn lex_empty_str() {
-        let mut lexer = Lexer::new("", 0);
+        let lexer = Lexer::new("", 0);
         assert_eq!(lexer.lex().unwrap(), Vec::new());
     }
 
     #[test]
     fn lex_separators() {
         use crate::Token::*;
-        let mut lexer = Lexer::new(SEPARATOR_SRC, 0);
+        let lexer = Lexer::new(SEPARATOR_SRC, 0);
         let tokens = unwrap_rich_tokens(lexer.lex().unwrap());
         assert_eq!(
             tokens,
