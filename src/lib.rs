@@ -187,7 +187,7 @@ impl Display for Loc {
 
 pub fn format_tokens(xs: &[RichToken]) -> String {
     let mut buf = String::new();
-    for (i, rt) in xs.into_iter().enumerate() {
+    for (i, rt) in xs.iter().enumerate() {
         let token = &rt.inner;
         buf += token.spelling();
         match token {

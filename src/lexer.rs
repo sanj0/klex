@@ -27,9 +27,12 @@ impl<'a> Lexer<Chars<'a>> {
         }
     }
 }
-impl<I> Lexer<I>
+
+impl<I> Iterator for Lexer<I>
 where I: Iterator<Item = char> {
-    pub fn lex(&mut self) -> Result<Vec<RichToken>, KlexError> {
+    type Item = Result<RichToken, KlexError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
         // this could probably be written with variadics but that's too complicated :)
         macro_rules! extend {
             ($base:ident to $ex:ident if $c:literal) => {
@@ -71,16 +74,23 @@ where I: Iterator<Item = char> {
                 }
             };
         }
-        let mut tokens = Vec::new();
-
+        macro_rules! question_mark {
+            ($ex:expr) => {
+                {
+                    match $ex {
+                        Ok(x) => x,
+                        Err(e) => return Some(Err(e)),
+                    }
+                }
+            }
+        }
         use Token::*;
-        while let Some(c0) = self.chars.next_skip_ws() {
+        if let Some(c0) = self.chars.next_skip_ws() {
             let token_loc = self.chars.loc - 1;
             let start_index = self.chars.index - 1;
             let token = match c0 {
                 '0'..='9' => self.consume_num(c0),
-                '"' => self.consume_string_after_quote(token_loc)?,
-
+                '"' => question_mark!(self.consume_string_after_quote(token_loc)),
                 '!' => Bang,
                 '$' => Dollar,
                 '%' => Percent,
@@ -96,7 +106,7 @@ where I: Iterator<Item = char> {
                 '/' => {
                     match self.chars.next() {
                         Some('/') => self.consume_line_comment(),
-                        Some('*') => self.consume_block_comment()?,
+                        Some('*') => question_mark!(self.consume_block_comment()),
                         Some('=') => SlashEq,
                         _ => Slash,
                     }
@@ -115,18 +125,35 @@ where I: Iterator<Item = char> {
                 ')' => RParen,
                 _ => self.consume_symbol(c0),
             };
-            tokens.push(RichToken::new(
+            Some(Ok(RichToken::new(
                 token,
                 token_loc,
                 self.chars.index - start_index,
-            ));
+            )))
+        } else {
+            None
         }
-        Ok(tokens)
+    }
+}
+
+impl<I> Lexer<I>
+where I: Iterator<Item = char> {
+    /// Convenience function that collects the RichTokens yielded by this Lexer into a Vec, bailing
+    /// out on the first Error stumbled upon
+    pub fn lex(self) -> Result<Vec<RichToken>, KlexError> {
+        let mut buf = Vec::new();
+        for tok in self {
+            match tok {
+                Ok(t) => buf.push(t),
+                Err(e) => return Err(e),
+            }
+        }
+        Ok(buf)
     }
 
     fn consume_line_comment(&mut self) -> Token {
         let mut buf = String::new();
-        while let Some(c) = self.chars.next() {
+        for c in self.chars.by_ref() {
             if c == '\n' {
                 break
             } else {
@@ -140,11 +167,9 @@ where I: Iterator<Item = char> {
         let loc = self.chars.loc;
         let mut buf = String::new();
         while let Some(c) = self.chars.next() {
-            if c == '*' {
-                if self.chars.peek() == Some(&'/') {
-                    self.chars.next();
-                    return Ok(Token::Comment(Comment::BlockComment(buf)));
-                }
+            if c == '*' && self.chars.peek() == Some(&'/') {
+                self.chars.next();
+                return Ok(Token::Comment(Comment::BlockComment(buf)));
             }
             buf.push(c);
         }
