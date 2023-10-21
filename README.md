@@ -33,6 +33,28 @@ assert_eq!(
     ])
 ```
 
+As `Lexer` is an iterator, `RichToken`s can be streamed:
+
+```rust
+let lexer = Lexer::new("source code");
+for t in lexer {
+    match t {
+        Ok(t) => (),// do something
+        Err(e) => (),// do something
+    }
+}
+```
+
+Additionally, a Lexer can be instantiated with any `Iterator<Item = char>`:
+
+```rust
+let iter = ['a', '=', 'b'].into_iter();
+let lexer = Lexer::from_iter(iter, 0);
+for token in lexer.filter_map(|res| res.ok().map(|rt| rt.inner)) {
+    println!("{}", token.spelling());
+}
+```
+
 # Tokens
 
 The Lexer returns a `Vec` of `RichToken`s which are a `Token` alongside a `Loc`
