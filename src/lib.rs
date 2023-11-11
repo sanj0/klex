@@ -93,13 +93,14 @@ pub enum Token {
 }
 
 impl Token {
-    pub fn spelling(&self) -> &str {
+    pub fn spelling(&self) -> String {
         match self {
-            Self::Sym(s) | Self::Num(s) | Self::Str(s) => s,
+            Self::Sym(s) | Self::Num(s) => s.into(),
+                Self::Str(s) => format!("{s:?}"),
 
-            Self::Comment(c) => c.get(),
+            Self::Comment(c) => c.get().into(),
 
-            s => s.static_spelling().unwrap(),
+            s => s.static_spelling().unwrap().into(),
         }
     }
 
@@ -193,28 +194,12 @@ impl Display for Loc {
     }
 }
 
-pub fn format_tokens(xs: &[RichToken]) -> String {
-    let mut buf = String::new();
-    for (i, rt) in xs.iter().enumerate() {
-        let token = &rt.inner;
-        buf += token.spelling();
-        match token {
-            Token::LParen => (),
-            Token::LBrace => {
-                buf.push('\n');
-            }
-            Token::RBrace => {
-                buf.push('\n');
-            }
-            _ => {
-                if !matches!(xs.get(i + 1).map(|t| &t.inner), Some(Token::RParen)) {
-                    buf.push(' ');
-                }
-            }
-        }
-    }
-    buf = buf.trim_end().into();
-    buf
+/// writes the tokens so that they can be parsed. The result is computer readable but not human
+/// redable.
+pub fn write_tokens(xs: &[Token]) -> String {
+    xs.iter()
+        .map(|t| t.spelling() + " ")
+        .collect()
 }
 
 impl Comment {
@@ -225,12 +210,3 @@ impl Comment {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn format_tokens() {
-        let fmt = super::format_tokens(&Lexer::new("   a* (   b+   c  )     =d", 0).lex().unwrap());
-        assert_eq!(fmt, "a * (b + c) = d");
-    }
-}
