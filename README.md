@@ -1,3 +1,5 @@
+[![Rust](https://github.com/sanj0/klex/actions/workflows/rust.yml/badge.svg)](https://github.com/sanj0/klex/actions/workflows/rust.yml)
+
 # klex
 
 klex (phonetically equal to "Klecks" in German, meaning splatter) is a dumb,
