@@ -1,3 +1,47 @@
+//! Turns an [`Iterator`] over [`char`]s into an `Iterator` over [`Token`](RichToken).
+//!
+//! # Basic Usage
+//! Create a [`Lexer`] and iterate over the `Token`s it yields or collect them all into a
+//! [`Vec`].
+//!
+//! # Examples
+//! ## Collect `Token`s a source `String`:
+//! ```rust
+//! use klex::{Lexer, Token}
+//! let tokens = Lexer::new("greet = \"Hello, \" + name").lex()?;
+//! // Extract the inner token, discarding location information
+//! let inner_tokens: Vec<_> = tokens.into_iter().map(|t| t.inner).collect();
+//! assert_eq!(
+//!     inner_tokens,
+//!     vec![
+//!         Token::Sym("greet".into()),
+//!         Token::Equal,
+//!         Token::Str("Hello, ".into()),
+//!         Token::Plus,
+//!         Token::Sym("name".into()),
+//!     ])
+//! ```
+//!
+//! ## Iterate over `Token`s from source `String`
+//! ```rust
+//! let lexer = Lexer::new("source code");
+//! for t in lexer {
+//!     match t {
+//!         Ok(t) => (),// do something
+//!         Err(e) => (),// do something
+//!     }
+//! }
+//! ```
+//!
+//! ## Iterate over `Token`s from source `Iterator`
+//! ```rust
+//! let iter = ['a', '=', 'b'].into_iter();
+//! let lexer = Lexer::from_iter(iter, 0);
+//! for token in lexer.filter_map(|res| res.ok().map(|rt| rt.inner)) {
+//!     println!("{}", token.spelling());
+//! }
+//! ```
+
 use std::fmt::{self, Display};
 
 use thiserror::Error;
@@ -6,6 +50,7 @@ pub mod lexer;
 
 pub use lexer::Lexer;
 
+/// Something went wrong while lexing ...
 #[derive(Error, Debug)]
 pub enum KlexError {
     #[error("unterminated string literal starting at {0}")]
@@ -16,27 +61,39 @@ pub enum KlexError {
     UnterminatedBlockComment(Loc),
 }
 
-/// Holds the location of a token within the code.
+/// Holds the location of a [`Token`](RichToken) within the code.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Loc {
+    /// The index of the source file (or equivalent). This has no intrinsic meaning.
     pub file_index: usize,
+    /// The row where the `Token` starts, starting with 1
     pub row: usize,
+    /// The col (i. e. line) where the `Token` starts, starting with 1
     pub col: usize,
 }
 
-// A Line comment // ... or a Block comment /* ... */
+/// A comment!
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Comment {
+    /// A line comment:
+    /// // Lorem Ipsum
+    /// -> Comment(LineComment(" Lorem Ipsum"))
     LineComment(String),
+    /// A block comment:
+    /// /* Lorem Ipsum */
+    /// -> Comment(BlockComment(" Lorem Ipsum "))
     BlockComment(String),
 }
 
-/// A rich token, which includes an inner [token](Token), its [location](Loc) and its length in
+/// A rich token, which includes the actual [token](Token), its [location](Loc) and its length in
 /// characters.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct RichToken {
+    /// The actual token
     pub inner: Token,
+    /// The location of the token within source
     pub loc: Loc,
+    /// The length of the tokens in characters
     pub len: usize,
 }
 
@@ -44,55 +101,103 @@ pub struct RichToken {
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 #[non_exhaustive]
 pub enum Token {
+    /// A symbol is a keyword, identifier, etc.
     Sym(String),
+    /// A number literal
     Num(String),
+    /// A string literal
     Str(String),
 
+    /// A comment
     Comment(Comment),
 
+    /// !
     Bang,
+    /// $
     Dollar,
+    /// %
     Percent,
+    /// %
     Ampersand,
+    /// =
     Equal,
+    /// ==
     EqualEqual,
+    /// ?
     Question,
+    /// '
     Tick,
+    /// ,
     Comma,
+    /// ;
     SemiColon,
+    /// ;;
     SemiSemi,
+    /// .
     Period,
+    /// :
     Colon,
+    /// ::
     ColonColon,
 
+    /// /
     Slash,
+    /// /=
     SlashEq,
+    /// *
     Aster,
+    /// **
     AsterAster,
+    /// *=
     AsterEq,
+    /// +
     Plus,
+    /// ++
     PlusPlus,
+    /// +=
     PlusEq,
+    /// -
     Dash,
+    /// --
     DashDash,
+    /// -=
     DashEq,
+    /// <
     Less,
+    /// <=
     LessEq,
+    /// >
     Greater,
+    /// >=
     GreaterEq,
 
+    /// ->
     Arrow,
+    /// =>
     BigArrow,
 
+    /// {
     LBrace,
+    /// }
     RBrace,
+    /// [
     LBrack,
+    /// ]
     RBrack,
+    /// (
     LParen,
+    /// )
     RParen,
 }
 
 impl Token {
+    /// Converts the `Token` into a representation that spells it.
+    /// This means that when lexing the returned String, a copy of the original `Token` would be
+    /// produced.
+    /// # Example
+    /// ```rust
+    /// assert_eq!("\"hello, world!\"", Token::Str("hello, world!".into()).spelling())
+    /// ```
     pub fn spelling(&self) -> String {
         match self {
             Self::Sym(s) | Self::Num(s) => s.into(),
@@ -102,6 +207,8 @@ impl Token {
         }
     }
 
+    /// The same as [`Self::spelling()`] but returns `None` cases where a `&'static str` is not
+    /// possible. This is the case for `Sym`, `Num`, `Str` and `Comment`.
     pub fn static_spelling(&self) -> Option<&'static str> {
         match self {
             Self::Sym(_) | Self::Num(_) | Self::Str(_) | Self::Comment(_) => None,
@@ -157,6 +264,7 @@ impl RichToken {
 }
 
 impl Loc {
+    /// Returns a `Loc` that represents the start of the file with the given file id.
     pub fn start_of_file(file_index: usize) -> Self {
         Self {
             file_index,
@@ -192,8 +300,8 @@ impl Display for Loc {
     }
 }
 
-/// writes the tokens so that they can be parsed. The result is computer readable but not human
-/// redable.
+/// Concatenates the [`Token::spelling`] of all tokens from the given `Vec` with a single space
+/// after every token. This makes it re-parseable but not very pleasant to read as a human.
 pub fn write_tokens(xs: &[Token]) -> String {
     xs.iter().map(|t| t.spelling() + " ").collect()
 }
