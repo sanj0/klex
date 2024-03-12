@@ -2,6 +2,7 @@ use std::{iter::Peekable, str::Chars};
 
 use crate::{Comment, KlexError, Loc, RichToken, Token};
 
+/// An `Iterator` over `char`s that keeps track of the [`Location`](Loc).
 #[derive(Clone, Debug)]
 struct CharStream<I>
 where
@@ -12,6 +13,7 @@ where
     loc: Loc,
 }
 
+/// Turns an Iterator over `char`s into an `Iterator` over [`tokens`](RichToken).
 #[derive(Clone, Debug)]
 pub struct Lexer<I>
 where
@@ -153,8 +155,8 @@ impl<I> Lexer<I>
 where
     I: Iterator<Item = char>,
 {
-    /// Convenience function that collects the RichTokens yielded by this Lexer into a Vec, bailing
-    /// out on the first Error stumbled upon
+    /// Convenience function that collects the [`tokens`](RichToken) yielded by this `Lexer` into a `Vec`, bailing
+    /// out on the first Error stumbled upon.
     pub fn lex(self) -> Result<Vec<RichToken>, KlexError> {
         let mut buf = Vec::new();
         for tok in self {
