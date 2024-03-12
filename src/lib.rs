@@ -96,10 +96,8 @@ impl Token {
     pub fn spelling(&self) -> String {
         match self {
             Self::Sym(s) | Self::Num(s) => s.into(),
-                Self::Str(s) => format!("{s:?}"),
-
-            Self::Comment(c) => c.get().into(),
-
+            Self::Str(s) => format!("{s:?}"),
+            Self::Comment(c) => c.spelling(),
             s => s.static_spelling().unwrap().into(),
         }
     }
@@ -197,9 +195,7 @@ impl Display for Loc {
 /// writes the tokens so that they can be parsed. The result is computer readable but not human
 /// redable.
 pub fn write_tokens(xs: &[Token]) -> String {
-    xs.iter()
-        .map(|t| t.spelling() + " ")
-        .collect()
+    xs.iter().map(|t| t.spelling() + " ").collect()
 }
 
 impl Comment {
@@ -208,5 +204,11 @@ impl Comment {
             Self::LineComment(s) | Self::BlockComment(s) => s,
         }
     }
-}
 
+    pub fn spelling(&self) -> String {
+        match self {
+            Self::LineComment(s) => format!("//{s}"),
+            Self::BlockComment(s) => format!("/*{s}*/"),
+        }
+    }
+}
