@@ -7,8 +7,8 @@
 //! # Examples
 //! ## Collect `Token`s a source `String`:
 //! ```rust
-//! use klex::{Lexer, Token}
-//! let tokens = Lexer::new("greet = \"Hello, \" + name").lex()?;
+//! use klex::{Lexer, Token};
+//! let tokens = Lexer::new("greet = \"Hello, \" + name", 0).lex().unwrap();
 //! // Extract the inner token, discarding location information
 //! let inner_tokens: Vec<_> = tokens.into_iter().map(|t| t.inner).collect();
 //! assert_eq!(
@@ -24,7 +24,8 @@
 //!
 //! ## Iterate over `Token`s from source `String`
 //! ```rust
-//! let lexer = Lexer::new("source code");
+//! use klex::Lexer;
+//! let lexer = Lexer::new("source code", 0);
 //! for t in lexer {
 //!     match t {
 //!         Ok(t) => (),// do something
@@ -35,6 +36,7 @@
 //!
 //! ## Iterate over `Token`s from source `Iterator`
 //! ```rust
+//! use klex::Lexer;
 //! let iter = ['a', '=', 'b'].into_iter();
 //! let lexer = Lexer::from_iter(iter, 0);
 //! for token in lexer.filter_map(|res| res.ok().map(|rt| rt.inner)) {
@@ -196,6 +198,7 @@ impl Token {
     /// produced.
     /// # Example
     /// ```rust
+    /// use klex::Token;
     /// assert_eq!("\"hello, world!\"", Token::Str("hello, world!".into()).spelling())
     /// ```
     pub fn spelling(&self) -> String {
