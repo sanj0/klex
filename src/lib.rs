@@ -299,7 +299,7 @@ impl std::ops::Sub<usize> for Loc {
 
 impl Display for Loc {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "file{}:{}:{}", self.file_index, self.row, self.col)
+        write!(f, "file{}:{}:{}", self.file_index, self.row, self.col)
     }
 }
 
