@@ -114,7 +114,7 @@ where
                 '&' => Ampersand,
                 '=' => extend!(Equal to EqualEqual if '=' or BigArrow if '>'),
                 '?' => Question,
-                '\'' => Tick,
+                '\'' => question_mark!(self.consume_char_after_tick()),
                 ',' => Comma,
                 ';' => extend!(SemiColon to SemiSemi if ';'),
                 '.' => Period,
@@ -205,8 +205,7 @@ where
             match c {
                 '"' => return Ok(Token::Str(buf)),
                 '\\' => match self.chars.next() {
-                    Some(c @ '"') => buf.push(c),
-                    Some(c @ '\\') => buf.push(c),
+                    Some(c @ '"') | Some(c @ '\\') => buf.push(c),
                     Some('n') => buf.push('\n'),
                     Some('t') => buf.push('\t'),
                     Some('r') => buf.push('\r'),
@@ -218,6 +217,28 @@ where
             }
         }
         Err(KlexError::UnterminatedStringLiteral(loc))
+    }
+    //
+    // takes an loc so that UnterminatedStringLiteral errors are reported at the location of the
+    // opening quote and not the location of the first character
+    fn consume_char_after_tick(&mut self) -> Result<Token, KlexError> {
+        let c = match self.chars.next() {
+            Some('\\') => match self.chars.next() {
+                    Some(c @ '\'') | Some(c @ '\\') => c,
+                    Some('n') => '\n',
+                    Some('t') => '\t',
+                    Some('r') => '\r',
+                    Some(_) => return Err(KlexError::InvalidEscapeSequence(self.chars.loc - 1)),
+                    None => return Err(KlexError::UnterminatedCharLiteral(self.chars.loc - 2)),
+            }
+            Some('\n') | None => return Err(KlexError::UnterminatedCharLiteral(self.chars.loc - 1)),
+            Some(c) => c,
+        };
+        if let Some('\'') = self.chars.next() {
+            Ok(Token::Chr(c))
+        } else {
+            Err(KlexError::UnterminatedCharLiteral(self.chars.loc - 1))
+        }
     }
 
     fn consume_symbol(&mut self, c0: char) -> Token {
@@ -294,7 +315,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    const SEPARATOR_SRC: &str = "!$% &= ==? ' , ; ;;.: ::";
+    const SEPARATOR_SRC: &str = "!$% &= ==? , ; ;;.: ::";
     const SYMBOL_SRC: &str = "foo+bar =baz_or$not";
     use super::*;
 
@@ -316,7 +337,7 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Bang, Dollar, Percent, Ampersand, Equal, EqualEqual, Question, Tick, Comma,
+                Bang, Dollar, Percent, Ampersand, Equal, EqualEqual, Question, Comma,
                 SemiColon, SemiSemi, Period, Colon, ColonColon,
             ]
         );
