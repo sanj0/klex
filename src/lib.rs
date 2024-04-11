@@ -57,6 +57,8 @@ pub use lexer::Lexer;
 pub enum KlexError {
     #[error("unterminated string literal starting at {0}")]
     UnterminatedStringLiteral(Loc),
+    #[error("unterminated char literal starting at {0}")]
+    UnterminatedCharLiteral(Loc),
     #[error("invalid escape sequence at {0}")]
     InvalidEscapeSequence(Loc),
     #[error("unterminated block comment starting at {0}")]
@@ -109,6 +111,8 @@ pub enum Token {
     Num(String),
     /// A string literal
     Str(String),
+    /// A char literal
+    Chr(char),
 
     /// A comment
     Comment(Comment),
@@ -205,6 +209,7 @@ impl Token {
         match self {
             Self::Sym(s) | Self::Num(s) => s.into(),
             Self::Str(s) => format!("{s:?}"),
+            Self::Chr(c) => format!("{c:?}"),
             Self::Comment(c) => c.spelling(),
             s => s.static_spelling().unwrap().into(),
         }
@@ -214,7 +219,7 @@ impl Token {
     /// possible. This is the case for `Sym`, `Num`, `Str` and `Comment`.
     pub fn static_spelling(&self) -> Option<&'static str> {
         match self {
-            Self::Sym(_) | Self::Num(_) | Self::Str(_) | Self::Comment(_) => None,
+            Self::Sym(_) | Self::Num(_) | Self::Str(_) | Self::Chr(_) | Self::Comment(_) => None,
 
             Self::Bang => Some("!"),
             Self::Dollar => Some("$"),
