@@ -212,7 +212,6 @@ where
                     Some(_) => return Err(KlexError::InvalidEscapeSequence(self.chars.loc - 1)),
                     None => return Err(KlexError::UnterminatedStringLiteral(loc)),
                 },
-                '\n' => return Err(KlexError::UnterminatedStringLiteral(loc)),
                 _ => buf.push(c),
             }
         }
