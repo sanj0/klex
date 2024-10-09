@@ -10,6 +10,7 @@ thiserror = "1.0.48"
 
 [features]
 waffle_comments = []
+loc_with_origin = []
 
 [dev-dependencies]
 criterion = "0.3"

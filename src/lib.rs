@@ -74,7 +74,22 @@ pub struct Loc {
     pub row: usize,
     /// The col (i. e. line) where the `Token` starts, starting with 1
     pub col: usize,
+    /// The origin token (e. g. macro invocation)
+    #[cfg(feature = "loc_with_origin")]
+    pub origin: Option<LocNoOrigin>,
 }
+
+#[cfg(feature = "loc_with_origin")]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub struct LocNoOrigin {
+    /// The index of the source file (or equivalent). This has no intrinsic meaning.
+    pub file_index: usize,
+    /// The row where the `Token` starts, starting with 1
+    pub row: usize,
+    /// The col (i. e. line) where the `Token` starts, starting with 1
+    pub col: usize,
+}
+
 
 /// A comment!
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -283,6 +298,8 @@ impl Loc {
             file_index,
             row: 1,
             col: 1,
+            #[cfg(feature = "loc_with_origin")]
+            origin: None,
         }
     }
 }
@@ -303,6 +320,8 @@ impl std::ops::Sub<usize> for Loc {
             file_index: self.file_index,
             row: self.row,
             col: self.col - other,
+            #[cfg(feature = "loc_with_origin")]
+            origin: self.origin,
         }
     }
 }
