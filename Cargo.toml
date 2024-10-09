@@ -8,6 +8,9 @@ edition = "2021"
 [dependencies]
 thiserror = "1.0.48"
 
+[features]
+waffle_comments = []
+
 [dev-dependencies]
 criterion = "0.3"
 
