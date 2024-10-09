@@ -81,12 +81,17 @@ pub struct Loc {
 pub enum Comment {
     /// A line comment:
     /// // Lorem Ipsum
-    /// -> Comment(LineComment(" Lorem Ipsum"))
+    /// -> Comment::LineComment(" Lorem Ipsum")
     LineComment(String),
     /// A block comment:
     /// /* Lorem Ipsum */
-    /// -> Comment(BlockComment(" Lorem Ipsum "))
+    /// -> Comment::BlockComment(" Lorem Ipsum ")
     BlockComment(String),
+    /// A waffle comment:
+    /// \# Lorem Ipsum
+    /// -> Comment::WaffleComment(" Lorem Ipsum")
+    #[cfg(feature = "waffle_comments")]
+    WaffleComment(String),
 }
 
 /// A rich token, which includes the actual [token](Token), its [location](Loc) and its length in
@@ -318,6 +323,8 @@ impl Comment {
     pub fn get(&self) -> &String {
         match self {
             Self::LineComment(s) | Self::BlockComment(s) => s,
+            #[cfg(feature = "waffle_comments")]
+            Self::WaffleComment(s) => s,
         }
     }
 
@@ -325,6 +332,8 @@ impl Comment {
         match self {
             Self::LineComment(s) => format!("//{s}"),
             Self::BlockComment(s) => format!("/*{s}*/"),
+            #[cfg(feature = "waffle_comments")]
+            Self::WaffleComment(s) => format!("#{s}"),
         }
     }
 }

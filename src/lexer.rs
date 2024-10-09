@@ -120,6 +120,9 @@ where
                 '.' => Period,
                 ':' => extend!(Colon to ColonColon if ':'),
 
+                #[cfg(feature = "waffle_comments")]
+                '#' => self.consume_waffle_comment(),
+
                 '/' => match self.chars.next() {
                     Some('/') => self.consume_line_comment(),
                     Some('*') => question_mark!(self.consume_block_comment()),
@@ -178,6 +181,19 @@ where
             }
         }
         Token::Comment(Comment::LineComment(buf))
+    }
+
+    #[cfg(feature = "waffle_comments")]
+    fn consume_waffle_comment(&mut self) -> Token {
+        let mut buf = String::new();
+        for c in self.chars.by_ref() {
+            if c == '\n' {
+                break;
+            } else {
+                buf.push(c);
+            }
+        }
+        Token::Comment(Comment::WaffleComment(buf))
     }
 
     fn consume_block_comment(&mut self) -> Result<Token, KlexError> {
