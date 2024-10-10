@@ -66,7 +66,8 @@ pub enum KlexError {
 }
 
 /// Holds the location of a [`Token`](RichToken) within the code.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[cfg_attr(not(feature = "loc_with_origin"), derive(Copy))]
 pub struct Loc {
     /// The index of the source file (or equivalent). This has no intrinsic meaning.
     pub file_index: usize,
@@ -76,20 +77,8 @@ pub struct Loc {
     pub col: usize,
     /// The origin token (e. g. macro invocation)
     #[cfg(feature = "loc_with_origin")]
-    pub origin: Option<LocNoOrigin>,
+    pub origin: Option<Box<Loc>>,
 }
-
-#[cfg(feature = "loc_with_origin")]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub struct LocNoOrigin {
-    /// The index of the source file (or equivalent). This has no intrinsic meaning.
-    pub file_index: usize,
-    /// The row where the `Token` starts, starting with 1
-    pub row: usize,
-    /// The col (i. e. line) where the `Token` starts, starting with 1
-    pub col: usize,
-}
-
 
 /// A comment!
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
