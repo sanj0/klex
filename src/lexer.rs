@@ -103,11 +103,12 @@ where
         }
         use Token::*;
         if let Some(c0) = self.chars.next_skip_ws() {
-            let token_loc = self.chars.loc - 1;
+            let token_loc = self.chars.loc.clone() - 1;
             let start_index = self.chars.index - 1;
             let token = match c0 {
                 '0'..='9' => self.consume_num(c0),
-                '"' => question_mark!(self.consume_string_after_quote(token_loc)),
+                #[cfg(feature = "loc_with_origin")]
+                '"' => question_mark!(self.consume_string_after_quote(token_loc.clone())),
                 '!' => Bang,
                 '$' => Dollar,
                 '%' => Percent,
@@ -197,7 +198,7 @@ where
     }
 
     fn consume_block_comment(&mut self) -> Result<Token, KlexError> {
-        let loc = self.chars.loc;
+        let loc = self.chars.loc.clone();
         let mut buf = String::new();
         while let Some(c) = self.chars.next() {
             if c == '*' && self.chars.peek() == Some(&'/') {
@@ -225,7 +226,7 @@ where
                     Some('n') => buf.push('\n'),
                     Some('t') => buf.push('\t'),
                     Some('r') => buf.push('\r'),
-                    Some(_) => return Err(KlexError::InvalidEscapeSequence(self.chars.loc - 1)),
+                    Some(_) => return Err(KlexError::InvalidEscapeSequence(self.chars.loc.clone() - 1)),
                     None => return Err(KlexError::UnterminatedStringLiteral(loc)),
                 },
                 _ => buf.push(c),
@@ -243,16 +244,16 @@ where
                     Some('n') => '\n',
                     Some('t') => '\t',
                     Some('r') => '\r',
-                    Some(_) => return Err(KlexError::InvalidEscapeSequence(self.chars.loc - 1)),
-                    None => return Err(KlexError::UnterminatedCharLiteral(self.chars.loc - 2)),
+                    Some(_) => return Err(KlexError::InvalidEscapeSequence(self.chars.loc.clone() - 1)),
+                    None => return Err(KlexError::UnterminatedCharLiteral(self.chars.loc.clone() - 2)),
             }
-            Some('\n') | None => return Err(KlexError::UnterminatedCharLiteral(self.chars.loc - 1)),
+            Some('\n') | None => return Err(KlexError::UnterminatedCharLiteral(self.chars.loc.clone() - 1)),
             Some(c) => c,
         };
         if let Some('\'') = self.chars.next() {
             Ok(Token::Chr(c))
         } else {
-            Err(KlexError::UnterminatedCharLiteral(self.chars.loc - 1))
+            Err(KlexError::UnterminatedCharLiteral(self.chars.loc.clone() - 1))
         }
     }
 
@@ -393,6 +394,8 @@ mod tests {
                     file_index: 0,
                     row: $row,
                     col: $col,
+                    #[cfg(feature = "loc_with_origin")]
+                    origin: None,
                 }
             };
         }
