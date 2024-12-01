@@ -345,3 +345,9 @@ impl Comment {
         }
     }
 }
+
+impl From<KlexError> for String {
+    fn from(e: KlexError) -> String {
+        e.to_string()
+    }
+}
