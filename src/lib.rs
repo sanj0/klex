@@ -53,7 +53,7 @@ pub mod lexer;
 pub use lexer::Lexer;
 
 /// Something went wrong while lexing ...
-#[derive(Error, Debug, Clone)]
+#[derive(Error, Debug, Clone, PartialEq)]
 pub enum KlexError {
     #[error("unterminated string literal starting at {0}")]
     UnterminatedStringLiteral(Loc),
