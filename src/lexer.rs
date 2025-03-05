@@ -134,7 +134,17 @@ where
                 },
                 '*' => extend!(Aster to AsterAster if '*' or AsterEq if '='),
                 '+' => extend!(Plus to PlusPlus if '+' or PlusEq if '='),
-                '-' => extend!(Dash to DashDash if '-' or DashEq if '=' or Arrow if '>'),
+                '-' => {
+                    if let Some(ch) = self.chars.peek() {
+                        if ch.is_ascii_digit() {
+                            self.consume_num('-')
+                        } else {
+                            extend!(Dash to DashDash if '-' or DashEq if '=' or Arrow if '>')
+                        }
+                    } else {
+                        Dash
+                    }
+                }
                 '<' => extend!(Less to LessEq if '='),
                 '>' => extend!(Greater to GreaterEq if '='),
 
@@ -213,7 +223,7 @@ where
     }
 
     fn consume_num(&mut self, c0: char) -> Token {
-        Token::Num(self.buf_while(c0, |c| c.is_ascii_digit() || c == '.'))
+        Token::Num(self.buf_while(c0, |c| c.is_ascii_digit() || c == '.' || c == '_'))
     }
 
     // takes an loc so that UnterminatedStringLiteral errors are reported at the location of the
