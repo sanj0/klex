@@ -109,6 +109,8 @@ where
                 '0'..='9' => self.consume_num(c0),
                 #[cfg(feature = "loc_with_origin")]
                 '"' => question_mark!(self.consume_string_after_quote(token_loc.clone())),
+                #[cfg(not(feature = "loc_with_origin"))]
+                '"' => question_mark!(self.consume_string_after_quote(token_loc)),
                 '!' => Bang,
                 '$' => Dollar,
                 '%' => Percent,
