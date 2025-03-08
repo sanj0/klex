@@ -217,6 +217,9 @@ impl Token {
     pub fn spelling(&self) -> String {
         match self {
             Self::Sym(s) | Self::Num(s) => s.into(),
+            #[cfg(feature = "raw_strings")]
+            Self::Str(s) => format!("{s}"),
+            #[cfg(not(feature = "raw_strings"))]
             Self::Str(s) => format!("{s:?}"),
             Self::Chr(c) => format!("{c:?}"),
             Self::Comment(c) => c.spelling(),
