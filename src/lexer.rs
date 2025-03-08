@@ -233,12 +233,22 @@ where
         while let Some(c) = self.chars.next() {
             match c {
                 '"' => return Ok(Token::Str(buf)),
+                #[cfg(not(feature = "raw_strings"))]
                 '\\' => match self.chars.next() {
                     Some(c @ '"') | Some(c @ '\\') => buf.push(c),
                     Some('n') => buf.push('\n'),
                     Some('t') => buf.push('\t'),
                     Some('r') => buf.push('\r'),
-                    Some(_) => return Err(KlexError::InvalidEscapeSequence(self.chars.loc.clone() - 1)),
+                    Some(_) => return Err(KlexError::InvalidEscapeSequence(self.chars.loc.clone() - 2)),
+                    None => return Err(KlexError::UnterminatedStringLiteral(loc)),
+                },
+                #[cfg(feature = "raw_strings")]
+                '\\' => match self.chars.next() {
+                    Some(c @ '"') | Some(c @ '\\') => buf.push(c),
+                    Some(c) => {
+                        buf.push('\\');
+                        buf.push(c);
+                    }
                     None => return Err(KlexError::UnterminatedStringLiteral(loc)),
                 },
                 _ => buf.push(c),
