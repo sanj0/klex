@@ -327,8 +327,10 @@ impl Display for Loc {
 impl Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Str(_) | Self::Sym(_) | Self::Num(_) | Self::Chr(_) | Self::Comment(_) => write!(f, "{}", self.spelling()),
-            _ => write!(f, "{}", self.static_spelling().unwrap())
+            Self::Str(_) | Self::Sym(_) | Self::Num(_) | Self::Chr(_) | Self::Comment(_) => {
+                write!(f, "{}", self.spelling())
+            }
+            _ => write!(f, "{}", self.static_spelling().unwrap()),
         }
     }
 }
