@@ -365,3 +365,20 @@ impl From<KlexError> for String {
         e.to_string()
     }
 }
+
+impl KlexError {
+    pub fn loc(&self) -> Loc {
+        match self {
+            #[cfg(feature = "loc_with_origin")]
+            Self::UnterminatedStringLiteral(loc)
+            | Self::UnterminatedCharLiteral(loc)
+            | Self::InvalidEscapeSequence(loc)
+            | Self::UnterminatedBlockComment(loc) => loc.clone(),
+            #[cfg(not(feature = "loc_with_origin"))]
+            Self::UnterminatedStringLiteral(loc)
+            | Self::UnterminatedCharLiteral(loc)
+            | Self::InvalidEscapeSequence(loc)
+            | Self::UnterminatedBlockComment(loc) => *loc,
+        }
+    }
+}
