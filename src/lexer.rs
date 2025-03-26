@@ -239,7 +239,9 @@ where
                     Some('n') => buf.push('\n'),
                     Some('t') => buf.push('\t'),
                     Some('r') => buf.push('\r'),
-                    Some(_) => return Err(KlexError::InvalidEscapeSequence(self.chars.loc.clone() - 2)),
+                    Some(_) => {
+                        return Err(KlexError::InvalidEscapeSequence(self.chars.loc.clone() - 2))
+                    }
                     None => return Err(KlexError::UnterminatedStringLiteral(loc)),
                 },
                 #[cfg(feature = "raw_strings")]
@@ -262,20 +264,32 @@ where
     fn consume_char_after_tick(&mut self) -> Result<Token, KlexError> {
         let c = match self.chars.next() {
             Some('\\') => match self.chars.next() {
-                    Some(c @ '\'') | Some(c @ '\\') => c,
-                    Some('n') => '\n',
-                    Some('t') => '\t',
-                    Some('r') => '\r',
-                    Some(_) => return Err(KlexError::InvalidEscapeSequence(self.chars.loc.clone() - 1)),
-                    None => return Err(KlexError::UnterminatedCharLiteral(self.chars.loc.clone() - 2)),
+                Some(c @ '\'') | Some(c @ '\\') => c,
+                Some('n') => '\n',
+                Some('t') => '\t',
+                Some('r') => '\r',
+                Some(_) => {
+                    return Err(KlexError::InvalidEscapeSequence(self.chars.loc.clone() - 1))
+                }
+                None => {
+                    return Err(KlexError::UnterminatedCharLiteral(
+                        self.chars.loc.clone() - 2,
+                    ))
+                }
+            },
+            Some('\n') | None => {
+                return Err(KlexError::UnterminatedCharLiteral(
+                    self.chars.loc.clone() - 1,
+                ))
             }
-            Some('\n') | None => return Err(KlexError::UnterminatedCharLiteral(self.chars.loc.clone() - 1)),
             Some(c) => c,
         };
         if let Some('\'') = self.chars.next() {
             Ok(Token::Chr(c))
         } else {
-            Err(KlexError::UnterminatedCharLiteral(self.chars.loc.clone() - 1))
+            Err(KlexError::UnterminatedCharLiteral(
+                self.chars.loc.clone() - 1,
+            ))
         }
     }
 
@@ -375,8 +389,8 @@ mod tests {
         assert_eq!(
             tokens,
             vec![
-                Bang, Dollar, Percent, Ampersand, Equal, EqualEqual, Question, Comma,
-                SemiColon, SemiSemi, Period, Colon, ColonColon,
+                Bang, Dollar, Percent, Ampersand, Equal, EqualEqual, Question, Comma, SemiColon,
+                SemiSemi, Period, Colon, ColonColon,
             ]
         );
     }
