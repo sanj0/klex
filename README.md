@@ -5,7 +5,7 @@
 klex (phonetically equal to "Klecks" in German, meaning splatter) is a dumb,
 simple lexer for my personal projects. It doesn't support much customizing and
 tokenizes rather opinionated. That is e. g. "\_hello" is a single symbol token.
-It also lexes eagerly, meaning ":::" is tokenizes as [ColonColon, Colon]
+It also lexes eagerly, meaning ":::" is tokenized as [ColonColon, Colon]
 
 # Usage
 
@@ -66,6 +66,7 @@ The `Token` is one of the following:
 - `Sym(String)`
 - `Num(String)`
 - `Str(String)`
+- `Chr(char)`
 - `Bang`, `Ampersand` etc; one of `[! $ % & = == ? ' , ; . : ::]`
 - `Slash`, `Aster` etc; one of `[/ // /= * ** *= + ++ += - -- -= < <= > >=]`
 - `LBrace`, `RBrace` etc; one of `[{ } [ ] ( )]`
