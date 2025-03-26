@@ -293,7 +293,7 @@ where
                 }
                 None => {
                     return Err(KlexError::UnterminatedCharLiteral(
-                        self.chars.loc.clone() - 2,
+                        self.chars.loc.clone() - 1,
                     ))
                 }
             },
