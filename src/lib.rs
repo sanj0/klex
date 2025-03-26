@@ -324,6 +324,15 @@ impl Display for Loc {
     }
 }
 
+impl Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Str(_) | Self::Sym(_) | Self::Num(_) | Self::Chr(_) | Self::Comment(_) => write!(f, "{}", self.spelling()),
+            _ => write!(f, "{}", self.static_spelling().unwrap())
+        }
+    }
+}
+
 /// Concatenates the [`Token::spelling`] of all tokens from the given `Vec` with a single space
 /// after every token. This makes it re-parseable but not very pleasant to read as a human.
 pub fn write_tokens(xs: &[Token]) -> String {
