@@ -159,6 +159,8 @@ pub enum Token {
     Slash,
     /// /=
     SlashEq,
+    /// \
+    BackSlash,
     /// *
     Aster,
     /// **
@@ -250,6 +252,7 @@ impl Token {
 
             Self::Slash => Some("/"),
             Self::SlashEq => Some("/="),
+            Self::BackSlash => Some("\\"),
             Self::Aster => Some("*"),
             Self::AsterAster => Some("**"),
             Self::AsterEq => Some("*="),

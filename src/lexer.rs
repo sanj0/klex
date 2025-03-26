@@ -132,6 +132,7 @@ where
                     Some('=') => SlashEq,
                     _ => Slash,
                 },
+                '\\' => BackSlash,
                 '*' => extend!(Aster to AsterAster if '*' or AsterEq if '='),
                 '+' => extend!(Plus to PlusPlus if '+' or PlusEq if '='),
                 '-' => {
