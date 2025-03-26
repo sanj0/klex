@@ -184,6 +184,26 @@ where
         Ok(buf)
     }
 
+    /// Like [`lex`] but ignores comments.
+    pub fn lex_ignore_comments(self) -> Result<Vec<RichToken>, KlexError> {
+        let mut buf = Vec::new();
+        for tok in self.filter(|rt| {
+            !matches!(
+                rt,
+                Ok(RichToken {
+                    inner: Token::Comment(_),
+                    ..
+                })
+            )
+        }) {
+            match tok {
+                Ok(t) => buf.push(t),
+                Err(e) => return Err(e),
+            }
+        }
+        Ok(buf)
+    }
+
     fn consume_line_comment(&mut self) -> Token {
         let mut buf = String::new();
         for c in self.chars.by_ref() {
