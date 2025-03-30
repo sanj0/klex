@@ -297,6 +297,31 @@ impl Loc {
             origin: None,
         }
     }
+
+    /// Prints this location and the correct line of the correct file.
+    /// Reads the file at the path at `file_index` in the given Vec.
+    pub fn pretty_print_with_line(&self, files: Vec<String>) -> Result<(), String> {
+        use std::fs::File;
+        use std::io::{BufRead, BufReader};
+
+        let path = files
+            .get(self.file_index)
+            .ok_or_else(|| format!("file index {} out of range", self.file_index))?;
+        let file = File::open(path).map_err(|e| format!("error opening file {path}: {e}"))?;
+        let reader = BufReader::new(file);
+        let line = reader
+            .lines()
+            .nth(self.row)
+            .ok_or_else(|| format!("no line {} in file {path}", self.file_index))?
+            .map_err(|e| format!("error reading {path} to line {}: {e}", self.row))?;
+        println!("{path}:{}:{}", self.row, self.col);
+        println!("{line}");
+        for _ in 0..self.col {
+            print!("-");
+        }
+        println!("^ here");
+        Ok(())
+    }
 }
 
 impl std::ops::Sub<Loc> for Loc {
