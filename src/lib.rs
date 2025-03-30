@@ -299,8 +299,8 @@ impl Loc {
     }
 
     /// Prints this location and the correct line of the correct file.
-    /// Reads the file at the path at `file_index` in the given Vec.
-    pub fn pretty_print_with_line(&self, files: Vec<String>) -> Result<(), String> {
+    /// Reads the file at the path at `file_index` in the given slice.
+    pub fn pretty_print_with_line(&self, files: &[String]) -> Result<(), String> {
         use std::fs::File;
         use std::io::{BufRead, BufReader};
 
