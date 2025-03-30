@@ -311,7 +311,7 @@ impl Loc {
         let reader = BufReader::new(file);
         let line = reader
             .lines()
-            .nth(self.row)
+            .nth(self.row - 1)
             .ok_or_else(|| format!("no line {} in file {path}", self.file_index))?
             .map_err(|e| format!("error reading {path} to line {}: {e}", self.row))?;
         println!("{path}:{}:{}", self.row, self.col);
