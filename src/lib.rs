@@ -316,7 +316,7 @@ impl Loc {
             .map_err(|e| format!("error reading {path} to line {}: {e}", self.row))?;
         println!("{path}:{}:{}", self.row, self.col);
         println!("{line}");
-        for _ in 0..self.col {
+        for _ in 0..self.col-1 {
             print!("-");
         }
         println!("^ here");
