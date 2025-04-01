@@ -317,7 +317,7 @@ impl Loc {
         let line_num_len = (self.col.ilog10() + 1) as usize;
         println!("  --> {path}:{}:{}\n{:width$} | ", self.row, self.col, "", width = line_num_len);
         println!("{:width$} | {line}", self.col, width = line_num_len);
-        print!("{:width$} |", "", width = line_num_len);
+        print!("{:width$} | ", "", width = line_num_len);
         for _ in 0..self.col-1 {
             print!("-");
         }
