@@ -314,12 +314,12 @@ impl Loc {
             .nth(self.row - 1)
             .ok_or_else(|| format!("no line {} in file {path}", self.file_index))?
             .map_err(|e| format!("error reading {path} to line {}: {e}", self.row))?;
-        println!("{path}:{}:{}", self.row, self.col);
-        println!("{line}");
+        println!(" --> {path}:{}:{}\n | ", self.row, self.col);
+        println!(" | {line}");
         for _ in 0..self.col-1 {
             print!("-");
         }
-        println!("^ here");
+        println!(" | ^ here");
         Ok(())
     }
 }
