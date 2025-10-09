@@ -135,17 +135,7 @@ where
                 '\\' => BackSlash,
                 '*' => extend!(Aster to AsterAster if '*' or AsterEq if '='),
                 '+' => extend!(Plus to PlusPlus if '+' or PlusEq if '='),
-                '-' => {
-                    if let Some(ch) = self.chars.peek() {
-                        if ch.is_ascii_digit() {
-                            self.consume_num('-')
-                        } else {
-                            extend!(Dash to DashDash if '-' or DashEq if '=' or Arrow if '>')
-                        }
-                    } else {
-                        Dash
-                    }
-                }
+                '-' => extend!(Dash to DashDash if '-' or DashEq if '=' or Arrow if '>'),
                 '<' => extend!(Less to LessEq if '='),
                 '>' => extend!(Greater to GreaterEq if '='),
 
