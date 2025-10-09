@@ -126,10 +126,19 @@ where
                 #[cfg(feature = "waffle_comments")]
                 '#' => self.consume_waffle_comment(),
 
-                '/' => match self.chars.next() {
-                    Some('/') => self.consume_line_comment(),
-                    Some('*') => question_mark!(self.consume_block_comment()),
-                    Some('=') => SlashEq,
+                '/' => match self.chars.peek() {
+                    Some('/') => {
+                        self.chars.next();
+                        self.consume_line_comment()
+                    }
+                    Some('*') => {
+                        self.chars.next();
+                        question_mark!(self.consume_block_comment())
+                    }
+                    Some('=') => {
+                        self.chars.next();
+                        SlashEq
+                    }
                     _ => Slash,
                 },
                 '\\' => BackSlash,
