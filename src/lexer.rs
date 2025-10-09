@@ -155,6 +155,7 @@ where
                 ']' => RBrack,
                 '(' => LParen,
                 ')' => RParen,
+                '^' => Hat,
                 _ => self.consume_symbol(c0),
             };
             Some(Ok(RichToken::new(
@@ -388,7 +389,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    const SEPARATOR_SRC: &str = "!$% &= ==? , ; ;;.: ::";
+    const SEPARATOR_SRC: &str = "!$% &= ==? , ; ;;.: ::^";
     const SYMBOL_SRC: &str = "foo+bar =baz_or$not";
     use super::*;
 
@@ -411,7 +412,7 @@ mod tests {
             tokens,
             vec![
                 Bang, Dollar, Percent, Ampersand, Equal, EqualEqual, Question, Comma, SemiColon,
-                SemiSemi, Period, Colon, ColonColon,
+                SemiSemi, Period, Colon, ColonColon, Hat,
             ]
         );
     }

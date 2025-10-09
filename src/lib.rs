@@ -205,6 +205,9 @@ pub enum Token {
     LParen,
     /// )
     RParen,
+
+    /// ^
+    Hat,
 }
 
 impl Token {
@@ -276,6 +279,8 @@ impl Token {
             Self::RBrack => Some("]"),
             Self::LParen => Some("("),
             Self::RParen => Some(")"),
+
+            Self::Hat => Some("^"),
         }
     }
 }
