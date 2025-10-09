@@ -500,4 +500,51 @@ mod tests {
             ]
         )
     }
+
+    #[test]
+    fn lex_simple_expressions() {
+        let src = "1+1";
+        let tokens = unwrap_rich_tokens(Lexer::new(src, 0).lex().unwrap());
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Num("1".into()),
+                Token::Plus,
+                Token::Num("1".into()),
+            ]
+        );
+
+        let src = "1-1";
+        let tokens = unwrap_rich_tokens(Lexer::new(src, 0).lex().unwrap());
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Num("1".into()),
+                Token::Dash,
+                Token::Num("1".into()),
+            ]
+        );
+
+        let src = "1*1";
+        let tokens = unwrap_rich_tokens(Lexer::new(src, 0).lex().unwrap());
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Num("1".into()),
+                Token::Aster,
+                Token::Num("1".into()),
+            ]
+        );
+
+        let src = "1/1";
+        let tokens = unwrap_rich_tokens(Lexer::new(src, 0).lex().unwrap());
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Num("1".into()),
+                Token::Slash,
+                Token::Num("1".into()),
+            ]
+        );
+    }
 }
