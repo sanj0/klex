@@ -11,7 +11,13 @@ fn main() -> Result<(), KlexError> {
         stdin().read_line(&mut input).expect("stdin error");
 
         let tokens = Lexer::new(&input, 0).lex()?;
-        println!("{}", tokens.iter().map(|t| t.inner.spelling()).collect::<String>());
+        println!(
+            "{}",
+            tokens
+                .iter()
+                .map(|t| t.inner.spelling())
+                .collect::<String>()
+        );
         input.clear();
     }
 }

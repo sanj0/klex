@@ -320,10 +320,16 @@ impl Loc {
             .ok_or_else(|| format!("no line {} in file {path}", self.file_index))?
             .map_err(|e| format!("error reading {path} to line {}: {e}", self.row))?;
         let line_num_len = (self.row.ilog10() + 1) as usize;
-        println!("  --> {path}:{}:{}\n{:width$} | ", self.row, self.col, "", width = line_num_len);
+        println!(
+            "  --> {path}:{}:{}\n{:width$} | ",
+            self.row,
+            self.col,
+            "",
+            width = line_num_len
+        );
         println!("{:width$} | {line}", self.row, width = line_num_len);
         print!("{:width$} | ", "", width = line_num_len);
-        for _ in 0..self.col-1 {
+        for _ in 0..self.col - 1 {
             print!("-");
         }
         println!("^ here");
